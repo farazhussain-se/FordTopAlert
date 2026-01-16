@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Safety Notification Widget</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            padding: 16px;
+            min-height: 100vh;
+        }
+
+        .widget-container {
+            max-width: 480px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .widget-header {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .widget-header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .widget-header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .notification-card {
+            padding: 24px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .notification-card.safety-alert {
+            background: #fef2f2;
+            border-left: 4px solid #dc2626;
+        }
+
+        .notification-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .notification-icon.safety {
+            background: #dc2626;
+            color: white;
+        }
+
+        .notification-icon.general {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .notification-icon.maintenance {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .notification-meta {
+            flex: 1;
+        }
+
+        .notification-type {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+
+        .notification-type.safety {
+            color: #dc2626;
+        }
+
+        .notification-type.general {
+            color: #1976d2;
+        }
+
+        .notification-type.maintenance {
+            color: #f57c00;
+        }
+
+        .notification-time {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .notification-message {
+            font-size: 15px;
+            line-height: 1.5;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .notification-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-full {
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e5e5;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .signature-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px dashed #e5e5e5;
+        }
+
+        .signature-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .signature-display {
+            background: white;
+            border: 2px solid #dc2626;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            font-family: 'Brush Script MT', cursive, sans-serif;
+            font-size: 24px;
+            color: #dc2626;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .digital-signature-info {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+            font-size: 11px;
+            color: #666;
+        }
+
+        .signature-info-item {
+            flex: 1;
+            background: #f9f9f9;
+            padding: 8px;
+            border-radius: 6px;
+        }
+
+        .signature-info-label {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .acknowledged-state {
+            text-align: center;
+            padding: 20px;
+            color: #4caf50;
+        }
+
+        .acknowledged-state .icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .acknowledged-state h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .acknowledged-state p {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .stats-bar {
+            display: flex;
+            padding: 16px 24px;
+            background: #f9f9f9;
+            gap: 24px;
+        }
+
+        .stat {
+            flex: 1;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #dc2626;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 0;
+            }
+
+            .widget-container {
+                border-radius: 0;
+                min-height: 100vh;
+            }
+        }
+
+        .signage-board {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            padding: 24px;
+            color: white;
+        }
+
+        .signage-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .signage-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .signage-header p {
+            font-size: 13px;
+            opacity: 0.8;
+        }
+
+        .signage-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .signage-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px 16px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .signage-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .signage-time {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .signage-badge {
+            background: #10b981;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .no-signatures {
+            text-align: center;
+            padding: 40px 20px;
+            opacity: 0.6;
+        }
+
+        .toggle-signage-btn {
+            width: 100%;
+            padding: 16px;
+            background: #1e293b;
+            color: white;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .toggle-signage-btn:hover {
+            background: #334155;
+        }
+
+        .signature-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .signature-modal-content {
+            background: white;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 100%;
+            overflow: hidden;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+
+        .modal-header p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e5e5;
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #dc2626;
+        }
+
+        .canvas-container {
+            border: 2px solid #dc2626;
+            border-radius: 8px;
+            background: white;
+            margin-bottom: 12px;
+            touch-action: none;
+        }
+
+        #signature-canvas {
+            display: block;
+            width: 100%;
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        .canvas-instructions {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-clear {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .btn-clear:hover {
+            background: #e5e5e5;
+        }
+    </style>
+</head>
+<body>
+    <div class="widget-container">
+        <div class="widget-header">
+            <h1>Daily Safety Notification</h1>
+            <p id="current-date"></p>
+        </div>
+
+        <div id="notification-content" class="fade-in">
+            <!-- Notification will be inserted here -->
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-value" id="ack-count">0</div>
+                <div class="stat-label">Total Acknowledged</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="today-count">0</div>
+                <div class="stat-label">Today's Signatures</div>
+            </div>
+        </div>
+
+        <div id="signage-board" style="display: none;">
+            <!-- Digital signage will be inserted here -->
+        </div>
+    </div>
+
+    <script>
+        // Message database with different categories
+        const messages = {
+            safety: [
+                "Always wear your hard hat and safety glasses in designated areas. Your PPE is your first line of defense.",
+                "Report all near-misses immediately. Every report helps prevent future accidents.",
+                "Keep emergency exits clear at all times. Lives depend on quick evacuation routes.",
+                "Lock out, tag out, verify zero energy before servicing equipment. Never assume it's safe.",
+                "Watch your step on wet surfaces. Falls are preventable with awareness and caution.",
+                "Never bypass safety interlocks or guards. They're there to protect you.",
+                "Use three points of contact when climbing ladders or stairs. Keep yourself stable.",
+                "Store chemicals properly and check labels before use. Know what you're handling.",
+                "Keep work areas clean and organized. Clutter creates hazards.",
+                "If you see something unsafe, stop work and report it. Safety is everyone's responsibility."
+            ],
+            general: [
+                "Team meeting scheduled for 2 PM in Conference Room B. Please review agenda beforehand.",
+                "Remember to submit your timesheets by Friday EOD. Questions? Contact HR.",
+                "New parking permits are available at the front desk. Old permits expire this month.",
+                "Break room coffee machine has been serviced. Enjoy your fresh brew!",
+                "Wellness Wednesday: Free health screenings available in the cafeteria from 11-2.",
+                "Reminder: Building maintenance this Saturday. Limited access to facilities.",
+                "Employee appreciation lunch next Thursday. RSVP by Monday to attend.",
+                "Updated shift schedules posted on the bulletin board. Check for any changes.",
+                "IT will be performing system updates tonight at midnight. Expect brief downtime.",
+                "Suggestion box submissions are being reviewed. Keep your ideas coming!"
+            ],
+            maintenance: [
+                "Scheduled maintenance on Line 3 from 6-8 AM tomorrow. Plan production accordingly.",
+                "HVAC system inspection completed. All systems operating normally.",
+                "Fork lift FL-07 is out of service for repairs. Use alternate equipment.",
+                "Fire alarm testing this Wednesday at 10 AM. This is a drill, remain calm.",
+                "Water shut-off planned for Building A restrooms 1-3 PM today. Use Building B facilities.",
+                "Elevator maintenance in progress. Please use stairs temporarily.",
+                "Compressed air system pressure check scheduled for tonight after shift.",
+                "Emergency generator test successful. All backup systems functional.",
+                "Paint touch-up work in hallways. Watch for wet paint signs.",
+                "Loading dock door repair completed ahead of schedule. Normal operations resumed."
+            ]
+        };
+
+        // Get notification for the day
+        function getDailyNotification() {
+            const today = new Date();
+            const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
+            
+            // Seed random with day of year for consistency
+            const seed = dayOfYear;
+            const categories = ['safety', 'general', 'maintenance'];
+            const categoryIndex = seed % categories.length;
+            const category = categories[categoryIndex];
+            
+            const messageArray = messages[category];
+            const messageIndex = Math.floor((seed / categories.length)) % messageArray.length;
+            
+            return {
+                type: category,
+                message: messageArray[messageIndex],
+                icon: category === 'safety' ? '⚠️' : category === 'general' ? '📢' : '🔧',
+                time: today.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+            };
+        }
+
+        // Format date
+        function formatDate() {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date().toLocaleDateString('en-US', options);
+        }
+
+        // Load stats from localStorage
+        function loadStats() {
+            const stats = JSON.parse(localStorage.getItem('widgetStats') || '{"ackCount": 0, "lastAckDate": null}');
+            return stats;
+        }
+
+        // Save stats to localStorage
+        function saveStats(stats) {
+            localStorage.setItem('widgetStats', JSON.stringify(stats));
+        }
+
+        // Check if acknowledged today
+        function checkAcknowledgedToday() {
+            const today = new Date().toDateString();
+            const acknowledged = localStorage.getItem('acknowledgedDate');
+            return acknowledged === today;
+        }
+
+        // Get today's signature data
+        function getTodaySignature() {
+            const today = new Date().toDateString();
+            const signatures = JSON.parse(localStorage.getItem('signatures') || '[]');
+            return signatures.find(sig => sig.date === today);
+        }
+
+        // Check if signature is expired (more than 1 hour old)
+        function isSignatureExpired(signature) {
+            if (!signature || !signature.timestamp) return true;
+            const now = new Date().getTime();
+            const hourInMs = 60 * 60 * 1000; // 1 hour in milliseconds
+            return (now - signature.timestamp) > hourInMs;
+        }
+
+        // Render notification
+        function renderNotification() {
+            const notification = getDailyNotification();
+            const isAcknowledged = checkAcknowledgedToday();
+            const content = document.getElementById('notification-content');
+
+            if (isAcknowledged) {
+                const signature = getTodaySignature();
+                
+                // Check if signature exists and if it's been more than 1 hour
+                if (!signature || isSignatureExpired(signature)) {
+                    // Reset acknowledgment if expired or missing
+                    localStorage.removeItem('acknowledgedDate');
+                    renderNotification();
+                    return;
+                }
+                
+                content.innerHTML = `
+                    <div class="notification-card ${notification.type === 'safety' ? 'safety-alert' : ''}">
+                        <div class="notification-header">
+                            <div class="notification-icon ${notification.type}">
+                                ${notification.icon}
+                            </div>
+                            <div class="notification-meta">
+                                <div class="notification-type ${notification.type}">${notification.type}</div>
+                                <div class="notification-time">${notification.time}</div>
+                            </div>
+                        </div>
+                        <div class="notification-message">
+                            ${notification.message}
+                        </div>
+                        <div class="signature-section">
+                            <div class="signature-label">DIGITALLY ACKNOWLEDGED BY:</div>
+                            <div class="signature-display" style="font-family: inherit; font-size: 16px; font-weight: 600;">
+                                ${signature.name}
+                            </div>
+                            ${signature.signature ? `<div style="text-align: center; margin-top: 12px;"><img src="${signature.signature}" alt="Signature" style="max-width: 100%; height: 80px; border: 2px solid #dc2626; border-radius: 8px; background: white; padding: 8px;"></div>` : ''}
+                            <div class="digital-signature-info">
+                                <div class="signature-info-item">
+                                    <div class="signature-info-label">Time</div>
+                                    <div>${signature.time}</div>
+                                </div>
+                                <div class="signature-info-item">
+                                    <div class="signature-info-label">Date</div>
+                                    <div>${signature.dateFormatted}</div>
+                                </div>
+                                <div class="signature-info-item">
+                                    <div class="signature-info-label">Status</div>
+                                    <div>✓ Verified</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="toggle-signage-btn" onclick="toggleSignageBoard()">
+                        View All Acknowledgments Today
+                    </button>
+                `;
+            } else {
+                content.innerHTML = `
+                    <div class="notification-card ${notification.type === 'safety' ? 'safety-alert' : ''}">
+                        <div class="notification-header">
+                            <div class="notification-icon ${notification.type}">
+                                ${notification.icon}
+                            </div>
+                            <div class="notification-meta">
+                                <div class="notification-type ${notification.type}">${notification.type}</div>
+                                <div class="notification-time">${notification.time}</div>
+                            </div>
+                        </div>
+                        <div class="notification-message">
+                            ${notification.message}
+                        </div>
+                        <div class="notification-actions">
+                            <button class="btn btn-primary btn-full" onclick="openSignatureModal()">Acknowledge & Sign</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Update stats display
+        function updateStatsDisplay() {
+            const stats = loadStats();
+            const today = new Date().toDateString();
+            const signatures = JSON.parse(localStorage.getItem('signatures') || '[]');
+            const todayCount = signatures.filter(sig => sig.date === today).length;
+            
+            document.getElementById('ack-count').textContent = stats.ackCount;
+            document.getElementById('today-count').textContent = todayCount;
+        }
+
+        // Open signature modal
+        function openSignatureModal() {
+            const modal = document.createElement('div');
+            modal.className = 'signature-modal';
+            modal.id = 'signature-modal';
+            modal.innerHTML = `
+                <div class="signature-modal-content">
+                    <div class="modal-header">
+                        <h2>Digital Signature Required</h2>
+                        <p>Please enter your name and sign below</p>
+                    </div>
+                    <div class="modal-body">
+                        <div class="input-group">
+                            <label class="input-label">Full Name *</label>
+                            <input type="text" id="employee-name" class="input-field" placeholder="Enter your full name" autocomplete="off">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Signature *</label>
+                            <div class="canvas-container">
+                                <canvas id="signature-canvas" width="452" height="200"></canvas>
+                            </div>
+                            <div class="canvas-instructions">
+                                Draw your signature using your finger or stylus
+                            </div>
+                        </div>
+                        <div class="modal-actions">
+                            <button class="btn btn-clear" onclick="clearSignature()">Clear Signature</button>
+                            <button class="btn btn-primary" onclick="submitSignature()">Submit</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            initializeCanvas();
+        }
+
+        // Initialize canvas for drawing
+        let canvas, ctx, isDrawing = false;
+        let hasSignature = false;
+
+        function initializeCanvas() {
+            canvas = document.getElementById('signature-canvas');
+            ctx = canvas.getContext('2d');
+            ctx.strokeStyle = '#dc2626';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            // Mouse events
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
+
+            // Touch events
+            canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+            canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+            canvas.addEventListener('touchend', stopDrawing);
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            const rect = canvas.getBoundingClientRect();
+            ctx.beginPath();
+            ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+            hasSignature = true;
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            const rect = canvas.getBoundingClientRect();
+            ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+            ctx.stroke();
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        function handleTouchStart(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            isDrawing = true;
+            ctx.beginPath();
+            ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
+            hasSignature = true;
+        }
+
+        function handleTouchMove(e) {
+            e.preventDefault();
+            if (!isDrawing) return;
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            ctx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
+            ctx.stroke();
+        }
+
+        function clearSignature() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            hasSignature = false;
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('signature-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function submitSignature() {
+            const name = document.getElementById('employee-name').value.trim();
+            
+            if (!name) {
+                alert('Please enter your full name');
+                return;
+            }
+
+            if (!hasSignature) {
+                alert('Please provide your signature');
+                return;
+            }
+
+            // Save signature as image
+            const signatureImage = canvas.toDataURL();
+            acknowledgeNotification(name, signatureImage);
+            closeModal();
+        }
+
+        // Acknowledge notification
+        function acknowledgeNotification(userName, signatureImage) {
+            const today = new Date().toDateString();
+            const now = new Date();
+            localStorage.setItem('acknowledgedDate', today);
+
+            // Save signature
+            const signatures = JSON.parse(localStorage.getItem('signatures') || '[]');
+            
+            // Add new signature
+            signatures.push({
+                name: userName,
+                signature: signatureImage,
+                date: today,
+                dateFormatted: now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                time: now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+                timestamp: now.getTime()
+            });
+
+            // Keep only last 100 signatures
+            if (signatures.length > 100) {
+                signatures.shift();
+            }
+
+            localStorage.setItem('signatures', JSON.stringify(signatures));
+
+            let stats = loadStats();
+            stats.ackCount++;
+            stats.lastAckDate = today;
+            saveStats(stats);
+
+            renderNotification();
+            updateStatsDisplay();
+        }
+
+        // Toggle signage board
+        function toggleSignageBoard() {
+            const board = document.getElementById('signage-board');
+            if (board.style.display === 'none') {
+                renderSignageBoard();
+                board.style.display = 'block';
+            } else {
+                board.style.display = 'none';
+            }
+        }
+
+        // Render signage board
+        function renderSignageBoard() {
+            const today = new Date().toDateString();
+            const signatures = JSON.parse(localStorage.getItem('signatures') || '[]');
+            const todaySignatures = signatures.filter(sig => sig.date === today);
+            const board = document.getElementById('signage-board');
+
+            let signaturesHTML = '';
+            if (todaySignatures.length === 0) {
+                signaturesHTML = '<div class="no-signatures">No acknowledgments yet today</div>';
+            } else {
+                signaturesHTML = todaySignatures.map(sig => `
+                    <div class="signage-item" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                        <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                            <div>
+                                <div class="signage-name">${sig.name}</div>
+                                <div class="signage-time">${sig.time}</div>
+                            </div>
+                            <div class="signage-badge">✓ SIGNED</div>
+                        </div>
+                        ${sig.signature ? `<img src="${sig.signature}" alt="Signature" style="max-width: 200px; height: 60px; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; background: white; padding: 4px;">` : ''}
+                    </div>
+                `).join('');
+            }
+
+            board.innerHTML = `
+                <div class="signage-board">
+                    <div class="signage-header">
+                        <h2>📋 Digital Signage Board</h2>
+                        <p>Today's Acknowledgments: ${todaySignatures.length}</p>
+                    </div>
+                    <div class="signage-list">
+                        ${signaturesHTML}
+                    </div>
+                </div>
+                <button class="toggle-signage-btn" onclick="toggleSignageBoard()">
+                    Hide Signage Board
+                </button>
+            `;
+        }
+
+        // Dismiss notification (removed functionality)
+        function dismissNotification() {
+            // This function is no longer used - acknowledgment is required
+        }
+
+        // Initialize widget
+        function initWidget() {
+            document.getElementById('current-date').textContent = formatDate();
+            renderNotification();
+            updateStatsDisplay();
+        }
+
+        // Run on load
+        initWidget();
+
+        // Check for new day every minute
+        setInterval(() => {
+            const currentDate = new Date().toDateString();
+            const acknowledgedDate = localStorage.getItem('acknowledgedDate');
+            
+            // Check if it's a new day OR if signature has expired
+            if (acknowledgedDate !== currentDate) {
+                location.reload();
+            } else if (acknowledgedDate === currentDate) {
+                const signature = getTodaySignature();
+                if (isSignatureExpired(signature)) {
+                    localStorage.removeItem('acknowledgedDate');
+                    location.reload();
+                }
+            }
+        }, 60000);
+    </script>
+</body>
+</html>
