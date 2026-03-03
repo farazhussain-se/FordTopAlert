@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drive with Jim Farley – Latest Episode</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: transparent; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; padding: 10px; }
+
+        .player {
+            background: #1c1c1e;
+            border-radius: 14px;
+            overflow: hidden;
+            max-width: 100%;
+            color: white;
+        }
+
+        .player-top {
+            display: flex; gap: 14px; align-items: flex-start;
+            padding: 18px 18px 14px;
+        }
+        .pod-art {
+            width: 80px; height: 80px; border-radius: 10px;
+            object-fit: cover; background: #333; flex-shrink: 0;
+        }
+        .pod-info { flex: 1; min-width: 0; }
+        .pod-eyebrow {
+            font-size: 9px; font-weight: 800; color: #fc3c44;
+            text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 5px;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .pod-eyebrow .live-dot {
+            width: 6px; height: 6px; border-radius: 50%; background: #fc3c44;
+            animation: blink 2s infinite;
+        }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+        .pod-title {
+            font-size: 14px; font-weight: 700; line-height: 1.35;
+            color: white; margin-bottom: 5px;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .pod-show { font-size: 11px; color: rgba(255,255,255,0.45); font-weight: 500; }
+
+        .pod-desc {
+            font-size: 12px; color: rgba(255,255,255,0.55); line-height: 1.55;
+            padding: 0 18px 14px;
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+        }
+
+        .audio-wrap { padding: 0 18px 14px; }
+        audio {
+            width: 100%; height: 40px; display: block;
+            border-radius: 8px; outline: none;
+            accent-color: #fc3c44;
+        }
+
+        .pod-footer {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 18px 16px;
+            border-top: 1px solid rgba(255,255,255,0.07);
+        }
+        .pod-meta { display: flex; flex-direction: column; gap: 2px; }
+        .pod-date { font-size: 10px; color: rgba(255,255,255,0.35); }
+        .pod-dur  { font-size: 10px; color: rgba(255,255,255,0.35); }
+        .apple-btn {
+            display: flex; align-items: center; gap: 5px;
+            background: #fc3c44; color: white;
+            font-size: 10px; font-weight: 800;
+            padding: 6px 12px; border-radius: 99px;
+            text-decoration: none; white-space: nowrap;
+            transition: opacity 0.15s;
+        }
+        .apple-btn:hover { opacity: 0.85; }
+
+        /* Loading skeleton */
+        .skeleton { background: linear-gradient(90deg, #2c2c2e 25%, #3a3a3c 50%, #2c2c2e 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 6px; }
+        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+        .error-state { padding: 24px 18px; text-align: center; }
+        .error-state p { font-size: 12px; color: rgba(255,255,255,0.4); line-height: 1.6; }
+    </style>
+</head>
+<body>
+
+<div class="player" id="player">
+    <!-- Loading state -->
+    <div class="player-top" id="loading-state">
+        <div class="pod-art skeleton"></div>
+        <div class="pod-info">
+            <div class="skeleton" style="height:10px;width:80px;margin-bottom:8px;"></div>
+            <div class="skeleton" style="height:14px;width:100%;margin-bottom:6px;"></div>
+            <div class="skeleton" style="height:14px;width:70%;margin-bottom:6px;"></div>
+            <div class="skeleton" style="height:11px;width:50%;"></div>
+        </div>
+    </div>
+    <div class="audio-wrap" id="loading-audio">
+        <div class="skeleton" style="height:40px;border-radius:8px;"></div>
+    </div>
+
+    <!-- Populated content (hidden until loaded) -->
+    <div id="content" style="display:none;">
+        <div class="player-top">
+            <img class="pod-art" id="pod-art" src="" alt="Podcast artwork">
+            <div class="pod-info">
+                <div class="pod-eyebrow"><div class="live-dot"></div> Latest Episode</div>
+                <div class="pod-title" id="pod-title"></div>
+                <div class="pod-show">Drive with Jim Farley</div>
+            </div>
+        </div>
+        <div class="pod-desc" id="pod-desc"></div>
+        <div class="audio-wrap">
+            <audio id="pod-audio" controls preload="none"></audio>
+        </div>
+        <div class="pod-footer">
+            <div class="pod-meta">
+                <span class="pod-date" id="pod-date"></span>
+                <span class="pod-dur"  id="pod-dur"></span>
+            </div>
+            <a class="apple-btn" id="pod-link" href="https://podcasts.apple.com/us/podcast/drive-with-jim-farley/id1647604558" target="_blank">
+                🎙 Apple Podcasts
+            </a>
+        </div>
+    </div>
+
+    <div id="error-state" style="display:none;" class="error-state">
+        <p>🎙<br><br>Could not load the latest episode.<br>
+        <a href="https://podcasts.apple.com/us/podcast/drive-with-jim-farley/id1647604558" target="_blank" style="color:#fc3c44;font-weight:700;">Open in Apple Podcasts ↗</a></p>
+    </div>
+</div>
+
+<script>
+    var RSS = 'https://feeds.megaphone.fm/drive-podcast-spot';
+    var PROXY = 'https://api.allorigins.win/get?url=' + encodeURIComponent(RSS);
+
+    function fmtDate(str) {
+        var d = new Date(str);
+        return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    }
+
+    function fmtDur(secs) {
+        if (!secs) return '';
+        var s = parseInt(secs, 10);
+        if (isNaN(s)) {
+            // might already be HH:MM:SS
+            return secs + ' min';
+        }
+        var m = Math.floor(s / 60);
+        var h = Math.floor(m / 60);
+        var rm = m % 60;
+        return h > 0 ? h + 'h ' + rm + 'm' : m + ' min';
+    }
+
+    function stripHtml(html) {
+        var tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || '';
+    }
+
+    fetch(PROXY)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var parser = new DOMParser();
+            var xml    = parser.parseFromString(data.contents, 'text/xml');
+
+            var item  = xml.querySelector('item');
+            if (!item) throw new Error('No episodes found');
+
+            var title   = item.querySelector('title') ? item.querySelector('title').textContent : 'Latest Episode';
+            var desc    = item.querySelector('description') ? stripHtml(item.querySelector('description').textContent) : '';
+            var encl    = item.querySelector('enclosure');
+            var audio   = encl ? encl.getAttribute('url') : '';
+            var pubDate = item.querySelector('pubDate') ? item.querySelector('pubDate').textContent : '';
+            var link    = item.querySelector('link') ? item.querySelector('link').textContent : '';
+
+            // Duration — try itunes:duration first
+            var durEl = item.getElementsByTagNameNS('http://www.itunes.com/dtds/podcast-1.0.dtd','duration')[0]
+                     || item.querySelector('duration');
+            var dur   = durEl ? durEl.textContent : '';
+
+            // Artwork — itunes:image on item, fallback to channel
+            var artEl = item.getElementsByTagNameNS('http://www.itunes.com/dtds/podcast-1.0.dtd','image')[0]
+                     || xml.querySelector('channel')
+                            .getElementsByTagNameNS('http://www.itunes.com/dtds/podcast-1.0.dtd','image')[0];
+            var art   = artEl ? (artEl.getAttribute('href') || artEl.textContent) : '';
+
+            // Populate
+            document.getElementById('pod-title').textContent = title;
+            document.getElementById('pod-desc').textContent  = desc;
+            document.getElementById('pod-date').textContent  = fmtDate(pubDate);
+            document.getElementById('pod-dur').textContent   = fmtDur(dur);
+            if (audio) document.getElementById('pod-audio').src = audio;
+            if (art)   document.getElementById('pod-art').src   = art;
+            if (link)  document.getElementById('pod-link').href = link;
+
+            // Swap states
+            document.getElementById('loading-state').style.display = 'none';
+            document.getElementById('loading-audio').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+        })
+        .catch(function() {
+            document.getElementById('loading-state').style.display = 'none';
+            document.getElementById('loading-audio').style.display = 'none';
+            document.getElementById('error-state').style.display   = 'block';
+        });
+</script>
+</body>
+</html>
